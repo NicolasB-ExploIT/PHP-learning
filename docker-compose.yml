@@ -1,0 +1,68 @@
+services:
+  php:
+    build:
+      context: .
+      dockerfile: docker/php/Dockerfile
+    volumes:
+      - ./symfony:/var/www/html
+    networks:
+      - internal
+  nginx:
+    build:
+      context: .
+      dockerfile: docker/nginx/Dockerfile
+    environment:
+      MARIADB_USER: ${DB_USER}
+      MARIADB_PASSWORD: ${DB_PASSWORD}
+      MARIADB_DATABASE: ${DB_NAME}
+    depends_on:
+      - php
+    ports:
+      - "80:80"
+      - "443:443"
+    networks:
+      - internal
+    volumes:
+      - ./symfony:/var/www/html:ro
+      - ./docker/nginx/certs:/etc/nginx/certs
+  db:
+    build:
+      context: .
+      dockerfile: docker/mariadb/Dockerfile
+      args:
+        CREATE_USER: ${READONLY_USER}
+        CREATE_PASSWORD: ${READONLY_PASSWORD}
+    environment:
+      MARIADB_ROOT_PASSWORD: ${DB_ROOT_PASSWORD}
+      MARIADB_USER: ${DB_USER}
+      MARIADB_PASSWORD: ${DB_PASSWORD}
+      MARIADB_DATABASE: ${DB_NAME}
+    networks:
+      - internal
+    volumes:
+      - database_data:/var/lib/mysql
+  phpmyadmin:
+    image: phpmyadmin
+    restart: always
+    ports:
+      - 81:80
+    depends_on:
+      - db
+    environment:
+      PMA_HOST: db
+      PMA_USER : ${READONLY_USER}
+      PMA_PASSWORD  : ${READONLY_PASSWORD}
+      PMA_CONTROLUSER : ${DB_USER}
+      PMA_CONTROLPASS : ${DB_PASSWORD}
+    networks:
+      - internal
+networks:
+  internal:
+    driver: bridge
+      
+volumes:
+  database_data:
+  
+    
+
+
