@@ -7,6 +7,10 @@ services:
       - ./symfony:/var/www/html
     networks:
       - internal
+    environment:
+      MARIADB_USER: ${DB_USER}
+      MARIADB_PASSWORD: ${DB_PASSWORD}
+      MARIADB_DATABASE: ${DB_NAME}
   nginx:
     build:
       context: .
